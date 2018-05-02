@@ -1,15 +1,25 @@
-import { Component, ElementRef, OnInit, OnDestroy, Input, Output, EventEmitter, AfterViewChecked, DoCheck, NgZone } from '@angular/core';
-import { FormArray, FormControl, FormGroup } from '@angular/forms';
+import {
+  AfterViewChecked,
+  Component,
+  DoCheck,
+  ElementRef,
+  EventEmitter,
+  Input,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  Output,
+} from '@angular/core';
+import { FormControl, FormGroup } from '@angular/forms';
+import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
+import { Answer } from 'app/entry/entry-content/questions/answer.model';
+import { PiaService } from 'app/entry/pia.service';
+import { GlobalEvaluationService } from 'app/services/global-evaluation.service';
+import { SidStatusService } from 'app/services/sid-status.service';
 import { Subscription } from 'rxjs/Subscription';
 
-import { Evaluation } from './evaluation.model';
-import { Answer } from 'app/entry/entry-content/questions/answer.model';
-
-import { TranslateService, LangChangeEvent } from '@ngx-translate/core';
-import { GlobalEvaluationService } from 'app/services/global-evaluation.service';
 import { KnowledgeBaseService } from '../../knowledge-base/knowledge-base.service';
-import { SidStatusService } from 'app/services/sid-status.service';
-import { PiaService } from 'app/entry/pia.service';
+import { Evaluation } from './evaluation.model';
 
 @Component({
   selector: 'app-evaluations',
@@ -127,35 +137,9 @@ export class EvaluationsComponent implements OnInit, AfterViewChecked, OnDestroy
     });
 
     this.evaluation = new Evaluation();
-    this.evaluation.getByReference(this.pia.id, this.reference_to).then(() => {
-
-      // Translation for comment's placeholder
-      if (this.evaluation.status) {
-        if (this.evaluation.status === 1) {
-          this.comment_placeholder = this._translateService.instant('evaluations.placeholder_to_correct');
-        } else if (this.evaluation.status === 3) {
-          this.comment_placeholder = this._translateService.instant('evaluations.placeholder_acceptable');
-        } else {
-          this.comment_placeholder = this._translateService.instant('evaluations.placeholder_improvable2');
-        }
-      }
-
-      this.evaluationEvent.emit(this.evaluation);
-
-      if (!this.evaluation.gauges) {
-        this.evaluation.gauges = {x: 0, y: 0};
-      }
-
-      this.evaluationForm.controls['actionPlanComment'].patchValue(this.evaluation.action_plan_comment);
-      this.evaluationForm.controls['evaluationComment'].patchValue(this.evaluation.evaluation_comment);
-      if (this.evaluation.gauges) {
-        this.evaluationForm.controls['gaugeX'].patchValue(this.evaluation.gauges['x']);
-        this.evaluationForm.controls['gaugeY'].patchValue(this.evaluation.gauges['y']);
-      } else {
-        this.evaluationForm.controls['gaugeX'].patchValue(0);
-        this.evaluationForm.controls['gaugeY'].patchValue(0);
-      }
-    });
+    this.evaluation
+      .getByReference(this.pia.id, this.reference_to)
+      .then(() => this.updateEvaluationForm());
 
     if (this.item.questions) {
       const questions: any[] = this.item.questions.filter((question) => {
@@ -189,13 +173,47 @@ export class EvaluationsComponent implements OnInit, AfterViewChecked, OnDestroy
     }
   }
 
+  private updateEvaluationForm() {
+    // Translation for comment's placeholder
+    if (this.evaluation.status) {
+      if (this.evaluation.status === 1) {
+        this.comment_placeholder = this._translateService.instant('evaluations.placeholder_to_correct');
+      } else if (this.evaluation.status === 3) {
+        this.comment_placeholder = this._translateService.instant('evaluations.placeholder_acceptable');
+      } else {
+        this.comment_placeholder = this._translateService.instant('evaluations.placeholder_improvable2');
+      }
+    }
+
+    this.evaluationEvent.emit(this.evaluation);
+
+    if (!this.evaluation.gauges) {
+      this.evaluation.gauges = {x: 0, y: 0};
+    }
+
+    this.evaluationForm.controls['actionPlanComment'].patchValue(this.evaluation.action_plan_comment);
+    this.evaluationForm.controls['evaluationComment'].patchValue(this.evaluation.evaluation_comment);
+    if (this.evaluation.gauges) {
+      this.evaluationForm.controls['gaugeX'].patchValue(this.evaluation.gauges['x']);
+      this.evaluationForm.controls['gaugeY'].patchValue(this.evaluation.gauges['y']);
+    } else {
+      this.evaluationForm.controls['gaugeX'].patchValue(0);
+      this.evaluationForm.controls['gaugeY'].patchValue(0);
+    }
+  }
+
   /**
    * Updates evaluation fields according to the selected button.
    * @param {Event} event - Any event.
    * @param {number} status - The status of the evaluation (to be fixed, improvable, acceptable).
    * @memberof EvaluationsComponent
    */
-  selectedButton(event, status: number) {
+  async selectedButton(event, status: number) {
+    // await this.evaluation.getByReference(this.pia.id, this.evaluation.reference_to);
+    // this.checkEvaluationValidation();
+    await this.evaluation
+      .getByReference(this.pia.id, this.evaluation.reference_to)
+      .then(() => this.updateEvaluationForm());
     this.evaluation.global_status = 0;
     this.evaluation.status = status;
 

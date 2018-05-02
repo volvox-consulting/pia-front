@@ -1,19 +1,16 @@
-import { Router, ActivatedRoute, Params } from '@angular/router';
-import { Component, OnInit, Input, OnChanges } from '@angular/core';
-import { Http } from '@angular/http';
-import 'rxjs/add/operator/map'
+import 'rxjs/add/operator/map';
 
-import { Evaluation } from 'app/entry/entry-content/evaluations/evaluation.model';
-
-import { AppDataService } from 'app/services/app-data.service';
-import { MeasureService } from 'app/entry/entry-content/measures/measures.service';
-import { ModalsService } from 'app/modals/modals.service';
-import { PiaService } from 'app/entry/pia.service';
-import { PaginationService } from 'app/entry/entry-content/pagination.service';
+import { Component, Input, OnChanges, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
-import { SidStatusService } from 'app/services/sid-status.service';
-import { GlobalEvaluationService } from 'app/services/global-evaluation.service';
+import { MeasureService } from 'app/entry/entry-content/measures/measures.service';
+import { PaginationService } from 'app/entry/entry-content/pagination.service';
 import { KnowledgeBaseService } from 'app/entry/knowledge-base/knowledge-base.service';
+import { PiaService } from 'app/entry/pia.service';
+import { ModalsService } from 'app/modals/modals.service';
+import { AppDataService } from 'app/services/app-data.service';
+import { GlobalEvaluationService } from 'app/services/global-evaluation.service';
+import { SidStatusService } from 'app/services/sid-status.service';
 
 @Component({
   selector: 'app-entry-content',
@@ -88,13 +85,6 @@ export class EntryContentComponent implements OnInit, OnChanges {
         if (this._sidStatusService.itemStatus.hasOwnProperty(el) && this._sidStatusService.itemStatus[el] < 4 && el !== '4.3') {
           isPiaFullyEdited = false;
         }
-      }
-      if (isPiaFullyEdited) {
-        this.goToNextSectionItem(4, 5);
-        this._modalsService.openModal('completed-edition');
-      } else {
-        this.goToNextSectionItem(0, 4);
-        this._modalsService.openModal('ask-for-evaluation');
       }
     });
   }
